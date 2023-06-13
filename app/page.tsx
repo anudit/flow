@@ -1,34 +1,30 @@
 "use client"
 
-import LookupComp from '@/components/LookupComp';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactFlow, {
-  Panel,
   MiniMap,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
   BackgroundVariant,
-  useReactFlow,
   ReactFlowInstance
 } from 'reactflow';
 
 import 'reactflow/dist/style.css';
-
+import '../styles/global.css';
 
 import { shallow } from 'zustand/shallow';
 import useStore, { selector } from '@/lib/store';
-import { initialEdges, initialNodes, nodeTypes } from '@/lib/initialUI';
+import { nodeTypes } from '@/lib/initialUI';
+import { Flex, Heading, IconButton, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react';
+import { AddIcon, HamburgerIcon } from '@chakra-ui/icons';
+import { EraserIcon } from '@/components/icons';
 
 const flowKey = 'local-flow';
 
 export default function App() {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, setEdges, setNodes } = useStore(selector, shallow);
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, setEdges, setNodes, reset } = useStore(selector, shallow);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance<any, any>>();
   const [loadLocal, setLoadLocal] = useState<boolean>(false);
-  const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(()=>{
     if (window?.localStorage && loadLocal == false) {
@@ -54,35 +50,48 @@ export default function App() {
 
   useEffect(()=>{
     if (rfInstance){
-      setSaving(true)
       const flow = rfInstance.toObject();
       localStorage.setItem(flowKey, JSON.stringify(flow));
-      console.log('saved');
-      setSaving(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes, edges])
+  }, [rfInstance, nodes, edges])
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        onInit={(data)=>{
-          setRfInstance(data)
-        }}
-      >
-        <Panel position="top-right">
-          {saving === true ? 'Saving...': 'Saved'}
-        </Panel>
-        <Controls />
-        <MiniMap />
-        <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
-      </ReactFlow>
-    </div>
+    <Flex width='100vw' height='100vh' direction='column'>
+      <Flex w="100%" align="center" alignItems='center'>
+        <Menu>
+          <MenuButton
+            as={IconButton}
+            aria-label='Options'
+            icon={<HamburgerIcon />}
+            variant='unstyled'
+          />
+          <MenuList>
+            <MenuItem icon={<EraserIcon />} command='⌘E' onClick={reset}>
+              Clear
+            </MenuItem>
+          </MenuList>
+        </Menu>
+        <Heading fontSize='sm'>
+          Flow
+        </Heading>
+      </Flex>
+      <Flex w="100%" h="100%">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          onInit={(data)=>{
+            setRfInstance(data)
+          }}
+        >
+          <Controls />
+          <MiniMap />
+          <Background variant={BackgroundVariant.Cross} gap={12} size={1} />
+        </ReactFlow>
+      </Flex>
+    </Flex>
   );
 }

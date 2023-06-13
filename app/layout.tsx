@@ -1,6 +1,6 @@
-import './globals.css'
 import { Inter } from 'next/font/google'
 import { Metadata } from 'next'
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 		default: "Flow",
 		template: "%s | Flow",
 	},
-	description: "Let your ideas flow naturally.",
+	description: "Never miss a train of thought.",
 	openGraph: {
 		title: "Flow",
 		description:
-			"Let your ideas flow naturally.",
+			"Never miss a train of thought.",
 		url: "https://flow.anudit.dev",
 		siteName: "flow.anudit.dev",
 		images: [
@@ -42,7 +42,8 @@ export const metadata: Metadata = {
 		card: "summary_large_image",
 	},
 	icons: {
-		shortcut: "/favicon.svg",
+		icon: "/icon.svg",
+		shortcut: "/icon.svg",
 	},
 };
 
@@ -53,7 +54,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+		<Providers>
+      		<body className={inter.className}>{children}</body>
+        </Providers>
     </html>
   )
 }
