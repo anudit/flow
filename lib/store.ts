@@ -19,28 +19,40 @@ import { initialEdges, initialNodes } from './initialUI';
 type RFState = {
   nodes: Node[];
   edges: Edge[];
+  setNodes: (node: Node[]) => void; 
+  setEdges: (node: Edge[]) => void; 
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addNode: (node: Node) => void; 
   addEdge: (node: Edge) => void; 
   appendNodeLabel: (nodeId: string, label: string) => void;
+  getNodeLabel: (nodeId: string) => string | undefined;
 };
 
 export const selector = (state: RFState) => ({
   nodes: state.nodes,
   edges: state.edges,
+  setNodes: state.setNodes,
+  setEdges: state.setEdges,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   onConnect: state.onConnect,
   addNode: state.addNode,
   addEdge: state.addEdge,
   appendNodeLabel: state.appendNodeLabel,
+  getNodeLabel: state.getNodeLabel,
 });
 
 const useStore = create<RFState>((set, get) => ({
   nodes: initialNodes,
   edges: initialEdges,
+  setNodes: (nodes : Node[]) => {
+    set({ nodes: nodes });
+  },
+  setEdges: (edges : Edge[]) => {
+    set({ edges: edges });
+  },
   onNodesChange: (changes: NodeChange[]) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes),
@@ -66,7 +78,7 @@ const useStore = create<RFState>((set, get) => ({
       edges: [...state.edges, edge],
     }));
   },
-  appendNodeLabel: (nodeId: string, label: string) => {
+  appendNodeLabel: (nodeId: string, text: string) => {
     set((state) => {
       const nodes = state.nodes.map((node) => {
         if (node.id === nodeId) {
@@ -74,7 +86,7 @@ const useStore = create<RFState>((set, get) => ({
             ...node,
             data: {
               ...node.data,
-              label: node.data?.label + label,
+              text: node.data?.text + text,
             },
           };
         }
@@ -86,6 +98,10 @@ const useStore = create<RFState>((set, get) => ({
       };
     });
   },
+  getNodeLabel: (nodeId: string) => {
+    const node = get().nodes.find((node) => node.id === nodeId);
+    return node?.data?.label;
+  }
 }));
 
 export default useStore;

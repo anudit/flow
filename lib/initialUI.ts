@@ -4,17 +4,27 @@ import { Edge, Node } from "reactflow";
 export const nodeTypes = {
     'lookupComp': LookupComp,
 }
-export const makeNodeConfig = (id: string, label: string = '', position = { x: 10, y: 10 }) => {
+export type nodeData = {
+    context: string, 
+    question: string,
+    text: string
+}
+
+export const makeNodeConfig = (
+    id: string, 
+    details: Omit<nodeData, 'text'> = {context: '', question: ''}, 
+    position: {x: number, y: number} = { x: 10, y: 10 }
+) => {
     return { 
         id, 
         position, 
-        data: { label }, 
+        data: { ...details, text: '' }, 
         type: 'lookupComp', 
         dragHandle: '.custom-drag-handle' 
     }
 }
-export const makeEdgeConfig = (from: string, to: string) => {
-    return { id: `e${from}-${to}`, source: from, target: to }
+export const makeEdgeConfig = (from: string, to: string, label: null | string = null) => {
+    return { id: `e${from}-${to}`, source: from, target: to, label }
 }
 
 export const initialNodes : Node[] = [

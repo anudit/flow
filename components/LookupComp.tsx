@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Flex, IconButton, Input } from '@chakra-ui/react';
+import { Button, ButtonGroup, Flex, IconButton, Input, Textarea } from '@chakra-ui/react';
 import {CheckCircleIcon, DragHandleIcon} from '@chakra-ui/icons';
 import React, { memo, useEffect, useRef } from 'react';
 import { Handle, Position, useEdges, useNodeId, useStoreApi } from 'reactflow';
@@ -7,7 +7,7 @@ import { createParser } from 'eventsource-parser';
 
 import { shallow } from 'zustand/shallow';
 import useStore, { selector } from '@/lib/store';
-import { makeEdgeConfig, makeNodeConfig } from '@/lib/initialUI';
+import { makeEdgeConfig, makeNodeConfig, nodeData } from '@/lib/initialUI';
 
 const Node = styled.div`
   padding: 10px 20px;
@@ -32,18 +32,18 @@ const Node = styled.div`
 `;
 
 
-const LookupComp = memo(({ data, selected }: {data: {label : string}, selected: any}) => {
+const LookupComp = memo(({ data, selected }: {data: nodeData, selected: any}) => {
   const nodeId = useNodeId();
-  const { addNode, addEdge, nodes, appendNodeLabel } = useStore(selector, shallow);
+  const { addNode, addEdge, nodes, appendNodeLabel, getNodeLabel } = useStore(selector, shallow);
   const selectRef = useRef<HTMLParagraphElement>(null)
-  const promptRef = useRef<HTMLInputElement>(null)
+  const promptRef = useRef<HTMLTextAreaElement>(null)
 
-  async function handleGpt(selectedText: string, prompt: string, nodeId: string) {
+  async function handleGpt(context: string, question: string, nodeId: string) {
 
     const response = await fetch('/api/chat', {
       method: 'POST',
       body: JSON.stringify({
-        prompt: `${prompt}\nContext:${selectedText}`
+        prompt: `${question}\nContext:${context}`
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -52,26 +52,9 @@ const LookupComp = memo(({ data, selected }: {data: {label : string}, selected: 
     
     if (response.body != null && response.ok === true){
       
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
   
-      const parser = createParser((event)=>{
-        console.log('event', event);
-        if (event.type === 'event') {
-          try {
-            const data = JSON.parse(event.data);
-            data.choices
-              .filter(({ delta }: {delta: {content: string}}) => !!delta.content)
-              .forEach(({ delta }: {delta: {content: string}}) => {
-                
-              });
-          } catch(e) {
-            console.log(e)
-          }
-        }
-      })
-
       while (true) {
         const { value, done } = await reader.read();
         const dataString = decoder.decode(value);
@@ -93,18 +76,23 @@ const LookupComp = memo(({ data, selected }: {data: {label : string}, selected: 
     <Node>
       <Handle type="target" position={Position.Left} />
       <Flex w="100%" m="-20px"  position="absolute" flexDir='row-reverse'>
-        <ButtonGroup >
+        <ButtonGroup>
           <Button> <CheckCircleIcon onClick={()=>{
             if (nodeId != null && window != null){
               // @ts-expect-error
-              const highlighted = window.getSelection().toString();
-              const newId = String(nodes.length+1);
 
-              addNode(makeNodeConfig(newId, highlighted, {x:300, y:300}))
-              addEdge(makeEdgeConfig(String(nodeId), newId))
+              const highlighted =  window.getSelection().toString().trim();
+              const complete = getNodeLabel(nodeId);
+
+              const context = highlighted === "" ? complete === undefined ? '' : complete : highlighted;
+              const newId = String(nodes.length+1);
+              const question = promptRef.current && promptRef.current?.value.trim() != "" ? promptRef.current.value.trim() : 'Tell me more about this:';
+
+              addNode(makeNodeConfig(newId, {context, question}, {x:300, y:300}))
+              addEdge(makeEdgeConfig(String(nodeId), newId, question))
               handleGpt(
-                highlighted, 
-                promptRef.current && promptRef.current?.value.trim() != "" ? promptRef.current.value.trim() : 'Tell me more about this:',
+                context, 
+                question,
                 newId
               )
             }
@@ -113,8 +101,16 @@ const LookupComp = memo(({ data, selected }: {data: {label : string}, selected: 
         </ButtonGroup>
       </Flex>
       <Flex direction="column">
-        <Input ref={promptRef} type="text" placeholder='Prompt ?'/>
-        <strong ref={selectRef}>{data.label}</strong>
+        {
+          data?.context != "" && (
+            <>
+              <p>Context: {data.context}</p>
+              <br/>
+            </>
+          )
+        }
+        <p ref={selectRef}>{data.text}</p>
+        <Textarea ref={promptRef} placeholder={nodeId === '1' ? 'Ask me something' : 'Refine the thought.'}/>
       </Flex>
       <Handle type="source" position={Position.Right} />
     </Node>
