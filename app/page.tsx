@@ -17,7 +17,8 @@ import useStore, { selector } from '@/lib/store';
 import { nodeTypes } from '@/lib/initialUI';
 import { Flex, Heading, IconButton, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react';
 import { AddIcon, HamburgerIcon } from '@chakra-ui/icons';
-import { EraserIcon } from '@/components/icons';
+import { EraserIcon, SaveIcon } from '@/components/icons';
+import saveFile from '@/lib/saveFile';
 
 const flowKey = 'local-flow';
 
@@ -55,9 +56,17 @@ export default function App() {
     }
   }, [rfInstance, nodes, edges])
 
+  async function exportBackup() {
+    if (rfInstance){
+      const flow = rfInstance.toObject();
+      saveFile(JSON.stringify(flow), `flow-set.flow`, 'application/json')
+      
+    }
+  }
+
   return (
     <Flex width='100vw' height='100vh' direction='column'>
-      <Flex w="100%" align="center" alignItems='center'>
+      <Flex w="100%" align="center" alignItems='center' borderBottomColor='#000' borderBottomWidth="1px">
         <Menu>
           <MenuButton
             as={IconButton}
@@ -66,8 +75,11 @@ export default function App() {
             variant='unstyled'
           />
           <MenuList>
-            <MenuItem icon={<EraserIcon />} command='⌘E' onClick={reset}>
-              Clear
+            <MenuItem icon={<EraserIcon />} onClick={reset}>
+              Clear Board
+            </MenuItem>
+            <MenuItem icon={<SaveIcon />} onClick={exportBackup}>
+              Save Locally 
             </MenuItem>
           </MenuList>
         </Menu>
