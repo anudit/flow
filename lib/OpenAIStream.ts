@@ -54,7 +54,6 @@ import {
             const data = event.data
             // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
             if (data === '[DONE]') {
-              console.log('DONE')
               controller.close()
               return
             }
@@ -78,6 +77,7 @@ import {
         // stream response (SSE) from OpenAI may be fragmented into multiple chunks
         // this ensures we properly read chunks and invoke an event for each SSE event stream
         const parser = createParser(onParse)
+        // https://web.dev/streams/#asynchronous-iteration
         for await (const chunk of res.body as any) {
           parser.feed(decoder.decode(chunk))
         }
