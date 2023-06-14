@@ -27,7 +27,7 @@ type RFState = {
   addNode: (node: Node) => void; 
   addEdge: (node: Edge) => void; 
   appendNodeLabel: (nodeId: string, label: string) => void;
-  getNodeLabel: (nodeId: string) => string | undefined;
+  getNodeText: (nodeId: string) => string | undefined;
   setNodeText: (nodeId: string, text: string) => void;
   reset: () => void;
 };
@@ -43,7 +43,7 @@ export const selector = (state: RFState) => ({
   addNode: state.addNode,
   addEdge: state.addEdge,
   appendNodeLabel: state.appendNodeLabel,
-  getNodeLabel: state.getNodeLabel,
+  getNodeText: state.getNodeText,
   setNodeText: state.setNodeText,
   reset: state.reset,
 });
@@ -122,9 +122,9 @@ const useStore = create<RFState>((set, get) => ({
       };
     });
   },
-  getNodeLabel: (nodeId: string) => {
+  getNodeText: (nodeId: string) => {
     const node = get().nodes.find((node) => node.id === nodeId);
-    return node?.data?.label;
+    return node?.data?.text;
   },
   reset: () => {
     set((state) => ({
